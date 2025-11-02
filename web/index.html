@@ -20,11 +20,11 @@
         <div class="grid sm:grid-cols-2 gap-4">
           <input class="border rounded-xl p-3" name="customerName" placeholder="Your Name" required />
           <input class="border rounded-xl p-3" name="customerPhone" placeholder="Phone" required />
-          <input class="border rounded-xl p-3 sm:col-span-2" name="customerEmail" placeholder="Email (optional)" type="email" />
+          <input class="border rounded-xl p-3 sm:col-span-2" name="customerEmail" placeholder="Email" type="email" required/>
         </div>
 
         <div class="grid sm:grid-cols-3 gap-4">
-          <input class="border rounded-xl p-3" name="partySize" type="number" min="1" placeholder="Party size" required />
+          <input class="border rounded-xl p-3" name="partySize" type="number" min="1" placeholder="Party size(check availability)" required />
           <input class="border rounded-xl p-3" name="time" type="datetime-local" required />
           <select class="border rounded-xl p-3" name="tableId" id="tableSelect" required></select>
         </div>
