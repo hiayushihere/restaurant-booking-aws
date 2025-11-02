@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Book a Table | Cozy Bites</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50">
+  <div class="max-w-3xl mx-auto p-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold">Cozy Bites — Book a Table</h1>
+      <p class="text-slate-600">Simple demo booking</p>
+    </header>
+
+    <section class="bg-white rounded-2xl shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-4">Make a reservation</h2>
+
+      <form id="bookingForm" class="grid gap-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <input class="border rounded-xl p-3" name="customerName" placeholder="Your Name" required />
+          <input class="border rounded-xl p-3" name="customerPhone" placeholder="Phone" required />
+          <input class="border rounded-xl p-3 sm:col-span-2" name="customerEmail" placeholder="Email (optional)" type="email" />
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-4">
+          <input class="border rounded-xl p-3" name="partySize" type="number" min="1" placeholder="Party size" required />
+          <input class="border rounded-xl p-3" name="time" type="datetime-local" required />
+          <select class="border rounded-xl p-3" name="tableId" id="tableSelect" required></select>
+        </div>
+
+        <textarea class="border rounded-xl p-3" name="note" placeholder="Note (optional)"></textarea>
+
+        <button class="bg-black text-white rounded-xl px-5 py-3 hover:opacity-90">Book Now</button>
+      </form>
+
+      <div id="result" class="mt-6 hidden">
+        <h3 class="text-lg font-semibold mb-2">Booking Confirmed ✅</h3>
+        <p class="text-slate-700 mb-2" id="codeText"></p>
+        <img id="qrImg" class="w-40 h-40 border rounded-lg" alt="QR" />
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">Check availability (by day)</h2>
+      <div class="flex gap-3 items-center mb-4">
+        <input class="border rounded-xl p-3" type="date" id="datePick" />
+        <button id="checkBtn" class="border rounded-xl px-4 py-2 hover:bg-slate-100">Check</button>
+      </div>
+      <div id="avail" class="text-sm text-slate-700"></div>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE = "http://restaurant-env.eba-6kmimrke.ap-south-1.elasticbeanstalk.com";
+
+    async function loadTables() {
+      const res = await fetch(`${API_BASE}/api/tables`);
+      const tables = await res.json();
+      const sel = document.getElementById("tableSelect");
+      sel.innerHTML = "";
+      tables.forEach(t => {
+        const o = document.createElement("option");
+        o.value = t._id; o.textContent = `${t.name} (${t.capacity})`;
+        sel.appendChild(o);
+      });
+    }
+
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd.entries());
+      data.partySize = Number(data.partySize);
+      data.time = new Date(data.time).toISOString();
+      try {
+        const res = await fetch(`${API_BASE}/api/bookings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const out = await res.json();
+        if (!res.ok) throw new Error(out.error || "Failed");
+        document.getElementById("result").classList.remove("hidden");
+        document.getElementById("codeText").textContent = `Your code: ${out.booking.code}`;
+        document.getElementById("qrImg").src = out.qr;
+        e.target.reset();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    document.getElementById("checkBtn").addEventListener("click", async () => {
+      const date = document.getElementById("datePick").value;
+      if (!date) return alert("Pick a date");
+      const res = await fetch(`${API_BASE}/api/bookings/availability?date=${date}`);
+      const items = await res.json();
+      const box = document.getElementById("avail");
+      box.innerHTML = items.map(i => `<div class="py-2 border-b">
+        <div class="font-medium">${i.name} (cap ${i.capacity})</div>
+        <div>Booked times: ${i.times.map(t => new Date(t).toLocaleString()).join(", ") || "None"}</div>
+      </div>`).join("");
+    });
+
+    loadTables();
+  </script>
+</body>
+</html>

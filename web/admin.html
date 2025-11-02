@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Admin | Cozy Bites</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50">
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Admin — Bookings</h1>
+
+    <div class="flex gap-3 mb-4">
+      <input id="apiBase" class="border rounded-xl p-2" placeholder="API base (e.g. http://localhost:4000)" />
+      <input id="adminToken" class="border rounded-xl p-2" placeholder="x-admin-token" />
+      <button id="save" class="border rounded-xl px-4">Save</button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow p-4">
+      <div class="flex justify-between items-center">
+        <div class="font-semibold">Bookings</div>
+        <div>
+          Page <input id="page" value="1" class="w-16 border rounded p-1" /> 
+          <button id="load" class="border rounded px-3 py-1">Load</button>
+        </div>
+      </div>
+      <div id="list" class="mt-3 text-sm"></div>
+    </div>
+  </div>
+  <script>
+    const API_BASE = "http://restaurant-env.eba-6kmimrke.ap-south-1.elasticbeanstalk.com";
+    const apiBaseIn = document.getElementById("apiBase");
+    const adminTokenIn = document.getElementById("adminToken");
+
+    document.getElementById("save").onclick = () => {
+      localStorage.setItem("api_base", apiBaseIn.value);
+      localStorage.setItem("admin_token", adminTokenIn.value);
+      alert("Saved");
+    };
+
+    async function load() {
+        const base = API_BASE;
+        const token = localStorage.getItem("admin_token") || "";
+      const p = parseInt(document.getElementById("page").value || "1", 10);
+      const res = await fetch(`${base}/api/bookings?page=${p}`, { headers: { "x-admin-token": token }});
+      const out = await res.json();
+      const div = document.getElementById("list");
+      if (!res.ok) { div.textContent = out.error || "Error"; return; }
+      div.innerHTML = out.items.map(b => `
+        <div class="border-b py-2 flex justify-between">
+          <div>
+            <div class="font-medium">${b.customerName} (${b.partySize}) — ${new Date(b.time).toLocaleString()}</div>
+            <div class="text-slate-600">${b.customerPhone} • ${b.customerEmail || ""}</div>
+            <div>Table: ${b.table?.name || "?"} • Code: ${b.code} • Status: ${b.status}</div>
+          </div>
+          ${b.status === "CONFIRMED" ? `<button data-id="${b._id}" class="cancel border rounded px-3">Cancel</button>` : ""}
+        </div>
+      `).join("");
+      document.querySelectorAll(".cancel").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-id");
+          const r = await fetch(`${base}/api/bookings/${id}/cancel`, {
+            method: "PATCH",
+            headers: { "x-admin-token": token }
+          });
+          if (r.ok) load(); else alert("Failed");
+        };
+      });
+    }
+
+    document.getElementById("load").onclick = load;
+    load();
+  </script>
+</body>
+</html>

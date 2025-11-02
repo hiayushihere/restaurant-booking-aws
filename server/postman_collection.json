@@ -1,0 +1,77 @@
+{
+    "info": {
+      "name": "Restaurant Booking API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Health",
+        "request": { "method": "GET", "url": "{{base}}/" }
+      },
+      {
+        "name": "List Tables",
+        "request": { "method": "GET", "url": "{{base}}/api/tables" }
+      },
+      {
+        "name": "Create Table (admin)",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "x-admin-token", "value": "{{admin_token}}" }],
+          "url": "{{base}}/api/tables",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"name\":\"Booth-1\",\n  \"capacity\":4\n}"
+          }
+        }
+      },
+      {
+        "name": "Create Booking",
+        "request": {
+          "method": "POST",
+          "url": "{{base}}/api/bookings",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"customerName\":\"Ayushi\",\n  \"customerPhone\":\"9999999999\",\n  \"partySize\":2,\n  \"time\":\"2025-11-05T18:00:00.000Z\",\n  \"tableId\":\"REPLACE_WITH_TABLE_ID\"\n}"
+          }
+        }
+      },
+      {
+        "name": "Bookings (admin, paged)",
+        "request": {
+          "method": "GET",
+          "url": "{{base}}/api/bookings?page=1&limit=10",
+          "header": [{ "key": "x-admin-token", "value": "{{admin_token}}" }]
+        }
+      },
+      {
+        "name": "Cancel Booking (admin)",
+        "request": {
+          "method": "PATCH",
+          "url": "{{base}}/api/bookings/{{booking_id}}/cancel",
+          "header": [{ "key": "x-admin-token", "value": "{{admin_token}}" }]
+        }
+      },
+      {
+        "name": "Verify QR (public)",
+        "request": {
+          "method": "GET",
+          "url": "{{base}}/api/bookings/verify/{{code}}"
+        }
+      },
+      {
+        "name": "Availability (public)",
+        "request": {
+          "method": "GET",
+          "url": "{{base}}/api/bookings/availability?date=2025-11-05"
+        }
+      }
+    ],
+    "variable": [
+      { "key": "base", "value": "http://localhost:4000" },
+      { "key": "admin_token", "value": "AyushiAdmin@2025" },
+      { "key": "booking_id", "value": "" },
+      { "key": "code", "value": "" }
+    ]
+  }
+  
